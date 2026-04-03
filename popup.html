@@ -11,43 +11,43 @@
       <section class="hero-card">
         <p class="eyebrow">LPAV MVP</p>
         <h1>Lin Prompt Asset Vault</h1>
-        <p class="hero-copy">先把文字收藏跑通，讓提示詞能直接進你指定的 Google Sheet。</p>
-        <div id="statusBanner" class="status-banner" data-state="idle">已就緒，準備寫入文字資產。</div>
+        <p id="heroCopy" class="hero-copy">先把影片資產流程做順，讓概念、提示詞與備註先進對應分頁。</p>
+        <div id="statusBanner" class="status-banner" data-state="idle">已就緒，預設準備寫入影片資產。</div>
       </section>
 
       <section class="panel">
         <div class="section-head">
           <h2>資產類型</h2>
-          <span class="section-tip">第一版先開文字收藏</span>
+          <span id="assetTypeTip" class="section-tip">預設先看影片分頁</span>
         </div>
         <div class="chip-row" role="tablist" aria-label="資產類型">
-          <button type="button" class="chip is-active" aria-selected="true">文字</button>
-          <button type="button" class="chip" disabled aria-selected="false">圖片</button>
-          <button type="button" class="chip" disabled aria-selected="false">影片</button>
+          <button type="button" class="chip" data-asset-type="video" aria-selected="false">影片</button>
+          <button type="button" class="chip" data-asset-type="image" aria-selected="false">圖片</button>
+          <button type="button" class="chip" data-asset-type="text" aria-selected="false">文字</button>
         </div>
       </section>
 
       <section class="panel">
         <div class="section-head">
-          <h2>新增一筆</h2>
-          <span class="section-tip">儲存到「文字」分頁</span>
+          <h2 id="composeTitle">新增影片資產</h2>
+          <span id="sheetTip" class="section-tip">儲存到「影片」分頁</span>
         </div>
 
         <form id="assetForm" class="asset-form">
           <label class="field">
-            <span class="field-label">標題</span>
-            <input id="title" name="title" type="text" maxlength="120" placeholder="例如：冷色金屬感主視覺提示詞" required>
+            <span class="field-label" id="titleLabel">標題</span>
+            <input id="title" name="title" type="text" maxlength="120" placeholder="例如：藍色能量流動短片概念" required>
           </label>
 
           <label class="field">
-            <span class="field-label">Prompt 內容</span>
-            <textarea id="promptText" name="promptText" rows="6" placeholder="把你真正要存的提示詞貼進來" required></textarea>
+            <span class="field-label" id="promptLabel">影片概念 / Prompt</span>
+            <textarea id="promptText" name="promptText" rows="6" placeholder="把影片概念、鏡頭描述、節奏或生成提示貼進來" required></textarea>
           </label>
 
           <div class="field-grid">
             <label class="field">
-              <span class="field-label">標籤</span>
-              <input id="tags" name="tags" type="text" maxlength="160" placeholder="排版, 材質, 視覺">
+              <span class="field-label" id="tagsLabel">標籤</span>
+              <input id="tags" name="tags" type="text" maxlength="160" placeholder="轉場, 動態, 光感">
             </label>
 
             <label class="field">
@@ -61,7 +61,7 @@
 
           <label class="field">
             <span class="field-label">備註</span>
-            <textarea id="notes" name="notes" rows="3" placeholder="補充靈感來源、版本差異、延伸方向"></textarea>
+            <textarea id="notes" name="notes" rows="3" placeholder="補充畫面節奏、靈感來源、版本差異"></textarea>
           </label>
 
           <div class="action-row">
@@ -74,8 +74,8 @@
 
       <section class="panel">
         <div class="section-head">
-          <h2>最近 5 筆</h2>
-          <span class="section-tip">從 Google Sheet 即時讀取</span>
+          <h2 id="recentTitle">最近 5 筆影片</h2>
+          <span id="recentTip" class="section-tip">從 Google Sheet 即時讀取目前分頁</span>
         </div>
         <div id="recentList" class="recent-list" aria-live="polite">
           <p class="empty-state">目前還沒有資料，先新增第一筆。</p>

@@ -6,6 +6,45 @@
   const RIGHT_OFFSET = 2;
   const BADGE_IMAGE_URL = chrome.runtime.getURL("assets/badge-lightning.png");
 
+  const ASSET_META = {
+    video: {
+      label: "影片",
+      composeTitle: "新增影片資產",
+      sheetTip: "寫入 Google Sheet 的「影片」分頁",
+      statusReady: "已就緒，預設準備寫入影片資產。",
+      titlePlaceholder: "例如：藍色能量流動短片概念",
+      promptLabel: "影片概念 / Prompt",
+      promptPlaceholder: "把影片概念、鏡頭描述、節奏或生成提示貼進來",
+      tagsPlaceholder: "轉場, 動態, 光感",
+      notesPlaceholder: "補充畫面節奏、靈感來源、版本差異",
+      recentTitle: "最近 5 筆影片"
+    },
+    image: {
+      label: "圖片",
+      composeTitle: "新增圖片資產",
+      sheetTip: "寫入 Google Sheet 的「圖片」分頁",
+      statusReady: "已就緒，準備寫入圖片資產。",
+      titlePlaceholder: "例如：霧面金屬海報主視覺",
+      promptLabel: "圖片概念 / Prompt",
+      promptPlaceholder: "把構圖、風格、材質、生成提示貼進來",
+      tagsPlaceholder: "材質, 排版, 構圖",
+      notesPlaceholder: "補充配色方向、靈感來源、延伸做法",
+      recentTitle: "最近 5 筆圖片"
+    },
+    text: {
+      label: "文字",
+      composeTitle: "新增文字資產",
+      sheetTip: "寫入 Google Sheet 的「文字」分頁",
+      statusReady: "已就緒，準備寫入文字資產。",
+      titlePlaceholder: "例如：冷色金屬感主視覺提示詞",
+      promptLabel: "文字內容 / Prompt",
+      promptPlaceholder: "把你真正要存的提示詞貼進來",
+      tagsPlaceholder: "排版, 材質, 視覺",
+      notesPlaceholder: "補充靈感來源、版本差異、延伸方向",
+      recentTitle: "最近 5 筆文字"
+    }
+  };
+
   if (window.top !== window.self) {
     return;
   }
@@ -48,7 +87,6 @@
         cursor: grab;
         user-select: none;
         -webkit-user-select: none;
-        color: #2d1f14;
         overflow: hidden;
         transition: transform 140ms ease, box-shadow 140ms ease;
       }
@@ -202,6 +240,33 @@
         font-size: 11px;
       }
 
+      .lpav-tab-row {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .lpav-tab {
+        min-height: 40px;
+        border: none;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #9da8bb;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .lpav-tab[data-active="true"] {
+        background: linear-gradient(135deg, #0d5e88 0%, #1bb6ff 100%);
+        color: #f5fbff;
+        box-shadow: 0 12px 24px rgba(27, 182, 255, 0.18);
+      }
+
+      .lpav-tab[disabled] {
+        opacity: 0.72;
+        cursor: wait;
+      }
+
       .lpav-form {
         display: grid;
         gap: 12px;
@@ -352,29 +417,35 @@
         </header>
 
         <div class="lpav-body">
-          <div id="lpavStatus" class="lpav-status" data-state="idle">已就緒，拖曳可調位置，點徽章可展開。</div>
+          <div id="lpavStatus" class="lpav-status" data-state="idle">已就緒，預設準備寫入影片資產。</div>
 
           <section class="lpav-card">
+            <div class="lpav-tab-row" role="tablist" aria-label="資產類型">
+              <button id="lpavTabVideo" class="lpav-tab" data-asset-type="video" data-active="true" aria-selected="true" type="button">影片</button>
+              <button id="lpavTabImage" class="lpav-tab" data-asset-type="image" data-active="false" aria-selected="false" type="button">圖片</button>
+              <button id="lpavTabText" class="lpav-tab" data-asset-type="text" data-active="false" aria-selected="false" type="button">文字</button>
+            </div>
+
             <div class="lpav-card-head">
-              <h3>新增文字資產</h3>
-              <span class="lpav-tip">寫入 Google Sheet 的「文字」分頁</span>
+              <h3 id="lpavComposeTitle">新增影片資產</h3>
+              <span id="lpavSheetTip" class="lpav-tip">寫入 Google Sheet 的「影片」分頁</span>
             </div>
 
             <form id="lpavForm" class="lpav-form">
               <label class="lpav-field">
                 <span class="lpav-label">標題</span>
-                <input id="lpavTitle" class="lpav-input" name="title" type="text" maxlength="120" placeholder="例如：冷色金屬感主視覺提示詞" required>
+                <input id="lpavTitle" class="lpav-input" name="title" type="text" maxlength="120" placeholder="例如：藍色能量流動短片概念" required>
               </label>
 
               <label class="lpav-field">
-                <span class="lpav-label">Prompt 內容</span>
-                <textarea id="lpavPromptText" class="lpav-textarea" name="promptText" placeholder="直接把你要收的 prompt 貼進來" required></textarea>
+                <span id="lpavPromptLabel" class="lpav-label">影片概念 / Prompt</span>
+                <textarea id="lpavPromptText" class="lpav-textarea" name="promptText" placeholder="把影片概念、鏡頭描述、節奏或生成提示貼進來" required></textarea>
               </label>
 
               <div class="lpav-grid">
                 <label class="lpav-field">
                   <span class="lpav-label">標籤</span>
-                  <input id="lpavTags" class="lpav-input" name="tags" type="text" maxlength="160" placeholder="排版, 材質, 視覺">
+                  <input id="lpavTags" class="lpav-input" name="tags" type="text" maxlength="160" placeholder="轉場, 動態, 光感">
                 </label>
 
                 <label class="lpav-field">
@@ -388,7 +459,7 @@
 
               <label class="lpav-field">
                 <span class="lpav-label">備註</span>
-                <textarea id="lpavNotes" class="lpav-textarea" name="notes" placeholder="補充靈感來源、版本差異、延伸方向"></textarea>
+                <textarea id="lpavNotes" class="lpav-textarea" name="notes" placeholder="補充畫面節奏、靈感來源、版本差異"></textarea>
               </label>
 
               <div class="lpav-action-row">
@@ -401,8 +472,8 @@
 
           <section class="lpav-card">
             <div class="lpav-card-head">
-              <h3>最近 5 筆</h3>
-              <span class="lpav-tip">會即時從試算表抓最新資料</span>
+              <h3 id="lpavRecentTitle">最近 5 筆影片</h3>
+              <span class="lpav-tip">會即時從試算表抓目前分頁</span>
             </div>
 
             <div id="lpavRecentList" class="lpav-recent-list" aria-live="polite">
@@ -421,15 +492,25 @@
   const dragHandle = shadow.getElementById("lpavDragHandle");
   const closeButton = shadow.getElementById("lpavCloseButton");
   const statusEl = shadow.getElementById("lpavStatus");
+  const composeTitle = shadow.getElementById("lpavComposeTitle");
+  const sheetTip = shadow.getElementById("lpavSheetTip");
+  const promptLabel = shadow.getElementById("lpavPromptLabel");
+  const recentTitle = shadow.getElementById("lpavRecentTitle");
   const form = shadow.getElementById("lpavForm");
+  const titleInput = shadow.getElementById("lpavTitle");
+  const promptInput = shadow.getElementById("lpavPromptText");
+  const tagsInput = shadow.getElementById("lpavTags");
+  const notesInput = shadow.getElementById("lpavNotes");
   const saveButton = shadow.getElementById("lpavSaveButton");
   const resetButton = shadow.getElementById("lpavResetButton");
   const refreshButton = shadow.getElementById("lpavRefreshButton");
   const recentList = shadow.getElementById("lpavRecentList");
+  const tabButtons = Array.from(shadow.querySelectorAll("[data-asset-type]"));
 
   const state = {
     isOpen: false,
-    top: DEFAULT_TOP
+    top: DEFAULT_TOP,
+    assetType: "video"
   };
 
   function storageGet(key) {
@@ -468,6 +549,9 @@
     saveButton.disabled = isBusy;
     resetButton.disabled = isBusy;
     refreshButton.disabled = isBusy;
+    tabButtons.forEach((button) => {
+      button.disabled = isBusy;
+    });
   }
 
   function setPanelOpen(isOpen) {
@@ -488,7 +572,37 @@
   }
 
   function sendMessage(type, payload = {}) {
-    return chrome.runtime.sendMessage({ type, payload });
+    return chrome.runtime.sendMessage({ type, payload }).catch((error) => {
+      const message = String(error?.message || error || "");
+      if (message.includes("Extension context invalidated")) {
+        throw new Error("擴充功能剛更新，請重新整理目前頁面後再試一次。");
+      }
+
+      throw error;
+    });
+  }
+
+  function applyAssetTypeUI(assetType) {
+    const meta = ASSET_META[assetType];
+    if (!meta) {
+      return;
+    }
+
+    state.assetType = assetType;
+    composeTitle.textContent = meta.composeTitle;
+    sheetTip.textContent = meta.sheetTip;
+    promptLabel.textContent = meta.promptLabel;
+    recentTitle.textContent = meta.recentTitle;
+    titleInput.placeholder = meta.titlePlaceholder;
+    promptInput.placeholder = meta.promptPlaceholder;
+    tagsInput.placeholder = meta.tagsPlaceholder;
+    notesInput.placeholder = meta.notesPlaceholder;
+
+    tabButtons.forEach((button) => {
+      const isActive = button.dataset.assetType === assetType;
+      button.dataset.active = String(isActive);
+      button.setAttribute("aria-selected", String(isActive));
+    });
   }
 
   function renderRecentEntries(entries) {
@@ -521,7 +635,7 @@
 
       const prompt = document.createElement("p");
       prompt.className = "lpav-recent-prompt";
-      prompt.textContent = entry.promptText || "沒有 prompt 內容";
+      prompt.textContent = entry.promptText || "沒有內容";
 
       head.append(title, meta);
       item.append(head, prompt);
@@ -540,15 +654,17 @@
   }
 
   async function refreshRecentEntries() {
-    setStatus("正在讀取最近資料。", "loading");
-    const response = await sendMessage("lpav:listRecentEntries");
+    setStatus(`正在讀取${ASSET_META[state.assetType].label}最近資料。`, "loading");
+    const response = await sendMessage("lpav:listRecentEntries", {
+      assetType: state.assetType
+    });
 
     if (!response?.ok) {
       throw new Error(response?.error || "讀取最近資料失敗。");
     }
 
     renderRecentEntries(response.entries || []);
-    setStatus("已刷新最近 5 筆資料。", "success");
+    setStatus(`已刷新最近 5 筆${ASSET_META[state.assetType].label}資料。`, "success");
   }
 
   async function openPanelAndRefresh() {
@@ -628,9 +744,28 @@
     setStatus("已收合懸浮面板。", "idle");
   });
 
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const nextType = button.dataset.assetType;
+      if (!nextType || nextType === state.assetType) {
+        return;
+      }
+
+      applyAssetTypeUI(nextType);
+      setBusy(true);
+      try {
+        await refreshRecentEntries();
+      } catch (error) {
+        setStatus(error.message || "切換分頁後讀取失敗。", "error");
+      } finally {
+        setBusy(false);
+      }
+    });
+  });
+
   resetButton.addEventListener("click", () => {
     form.reset();
-    setStatus("表單已清空。", "idle");
+    setStatus(ASSET_META[state.assetType].statusReady, "idle");
   });
 
   refreshButton.addEventListener("click", async () => {
@@ -646,18 +781,21 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const payload = getPayload();
+    const formData = getPayload();
 
-    if (!payload.title || !payload.promptText) {
-      setStatus("標題與 Prompt 內容都必填。", "error");
+    if (!formData.title || !formData.promptText) {
+      setStatus("標題與內容都必填。", "error");
       return;
     }
 
     setBusy(true);
-    setStatus("正在寫入 Google Sheet。", "loading");
+    setStatus(`正在寫入${ASSET_META[state.assetType].label}資料。`, "loading");
 
     try {
-      const response = await sendMessage("lpav:saveTextEntry", payload);
+      const response = await sendMessage("lpav:saveEntry", {
+        assetType: state.assetType,
+        formData
+      });
       if (!response?.ok) {
         throw new Error(response?.error || "寫入失敗。");
       }
@@ -677,8 +815,10 @@
   });
 
   (async () => {
+    applyAssetTypeUI(state.assetType);
     const storedTop = await storageGet(STORAGE_KEY);
     applyTop(typeof storedTop === "number" ? storedTop : DEFAULT_TOP);
+    setStatus(ASSET_META[state.assetType].statusReady, "idle");
   })().catch((error) => {
     console.error("LPAV 懸浮面板初始化失敗", error);
   });

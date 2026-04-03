@@ -2,6 +2,24 @@ import { LPAV_CONFIG } from "./config.local.js";
 import { getAccessToken } from "./googleAuth.js";
 import { buildEntryId, extractRowNumber, isoNow, trimMultilineText } from "./helpers.js";
 
+const ASSET_TYPE_META = {
+  video: {
+    sheetName: LPAV_CONFIG.spreadsheet.sheetNames.video,
+    label: "影片",
+    mimeType: "video/mp4"
+  },
+  image: {
+    sheetName: LPAV_CONFIG.spreadsheet.sheetNames.image,
+    label: "圖片",
+    mimeType: "image/png"
+  },
+  text: {
+    sheetName: LPAV_CONFIG.spreadsheet.sheetNames.text,
+    label: "文字",
+    mimeType: "text/plain"
+  }
+};
+
 const SHEET_HEADERS = [
   "編號",
   "建立時間",
@@ -85,25 +103,35 @@ async function ensureHeaderRow(sheetName) {
   });
 }
 
-async function ensureTextSheetReady() {
-  const sheetName = LPAV_CONFIG.spreadsheet.textSheetName;
+function getAssetMeta(assetType) {
+  const meta = ASSET_TYPE_META[assetType];
+  if (!meta) {
+    throw new Error(`不支援的資產類型：${assetType}`);
+  }
+
+  return meta;
+}
+
+async function ensureSheetReady(assetType) {
+  const { sheetName } = getAssetMeta(assetType);
   await ensureSheetExists(sheetName);
   await ensureHeaderRow(sheetName);
   return sheetName;
 }
 
-function buildTextRow(payload) {
+function buildEntryRow(assetType, payload) {
+  const meta = getAssetMeta(assetType);
   return [
     buildEntryId(),
     isoNow(),
-    "text",
+    meta.label,
     trimMultilineText(payload.title),
     trimMultilineText(payload.promptText),
     trimMultilineText(payload.tags),
     trimMultilineText(payload.notes),
     "",
     "",
-    "text/plain",
+    meta.mimeType,
     "false",
     String(Boolean(payload.favorite)),
     "active"
@@ -124,14 +152,14 @@ function mapRowToEntry(row) {
   };
 }
 
-export async function saveTextEntry(payload) {
-  const sheetName = await ensureTextSheetReady();
+export async function saveEntry(assetType, payload) {
+  const sheetName = await ensureSheetReady(assetType);
   const encodedRange = encodeURIComponent(`${sheetName}!A:M`);
   const result = await sheetsRequest(`/values/${encodedRange}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
     method: "POST",
     body: JSON.stringify({
       majorDimension: "ROWS",
-      values: [buildTextRow(payload)]
+      values: [buildEntryRow(assetType, payload)]
     })
   });
 
@@ -142,8 +170,8 @@ export async function saveTextEntry(payload) {
   };
 }
 
-export async function listRecentEntries(limit = 5) {
-  const sheetName = await ensureTextSheetReady();
+export async function listRecentEntries(assetType, limit = 5) {
+  const sheetName = await ensureSheetReady(assetType);
   const encodedRange = encodeURIComponent(`${sheetName}!A2:M`);
   const result = await sheetsRequest(`/values/${encodedRange}`);
   const rows = result.values || [];

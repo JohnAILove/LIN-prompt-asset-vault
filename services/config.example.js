@@ -6,6 +6,11 @@ export const LPAV_CONFIG = {
   },
   spreadsheet: {
     spreadsheetId: "請填入 Google Sheet ID",
-    textSheetName: "文字"
+    defaultAssetType: "video",
+    sheetNames: {
+      text: "文字",
+      image: "圖片",
+      video: "影片"
+    }
   }
 };

@@ -1,4 +1,4 @@
-import { listRecentEntries, saveTextEntry } from "./services/sheets.js";
+import { listRecentEntries, saveEntry } from "./services/sheets.js";
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   void handleMessage(message)
@@ -17,10 +17,10 @@ async function handleMessage(message) {
   }
 
   switch (message.type) {
-    case "lpav:saveTextEntry":
-      return saveTextEntry(message.payload);
+    case "lpav:saveEntry":
+      return saveEntry(message.payload.assetType, message.payload.formData);
     case "lpav:listRecentEntries":
-      return { entries: await listRecentEntries(5) };
+      return { entries: await listRecentEntries(message.payload.assetType, 5) };
     default:
       throw new Error(`不支援的訊息類型：${message.type}`);
   }
