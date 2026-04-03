@@ -20,6 +20,13 @@ const saveButton = document.getElementById("saveButton");
 const resetButton = document.getElementById("resetButton");
 const refreshButton = document.getElementById("refreshButton");
 const recentList = document.getElementById("recentList");
+const youtubePanel = document.getElementById("youtubePanel");
+const youtubeAuthBadge = document.getElementById("youtubeAuthBadge");
+const youtubeVideoFile = document.getElementById("youtubeVideoFile");
+const youtubePrivacyStatus = document.getElementById("youtubePrivacyStatus");
+const youtubeAuthButton = document.getElementById("youtubeAuthButton");
+const youtubeUploadButton = document.getElementById("youtubeUploadButton");
+const youtubeResult = document.getElementById("youtubeResult");
 const assetTypeButtons = Array.from(document.querySelectorAll("[data-asset-type]"));
 
 const ASSET_META = {
@@ -86,6 +93,8 @@ function setBusy(isBusy) {
   refreshButton.disabled = isBusy;
   createFolderButton.disabled = isBusy;
   refreshDraftIdButton.disabled = isBusy;
+  youtubeAuthButton.disabled = isBusy;
+  youtubeUploadButton.disabled = isBusy;
 
   assetTypeButtons.forEach((button) => {
     button.disabled = isBusy;
@@ -191,12 +200,32 @@ function applyAssetTypeUI(assetType) {
   createFolderButton.textContent = "建立資料夾";
   refreshDraftIdButton.textContent = "換編號";
   draftEntryId.textContent = state.draftIds[assetType] || "準備中";
+  youtubePanel.hidden = assetType !== "video";
 
   assetTypeButtons.forEach((button) => {
     const isActive = button.dataset.assetType === assetType;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-selected", String(isActive));
   });
+}
+
+function setYouTubeAuthState(authorized) {
+  youtubeAuthBadge.textContent = authorized ? "已授權" : "尚未授權";
+  youtubeAuthButton.textContent = authorized ? "重新授權" : "連接 YouTube";
+}
+
+async function refreshYouTubeAuthStatus() {
+  if (state.assetType !== "video") {
+    return;
+  }
+
+  try {
+    const response = await sendMessage("lpav:youtubeAuthStatus");
+    setYouTubeAuthState(Boolean(response?.authorized));
+  } catch (error) {
+    setYouTubeAuthState(false);
+    youtubeResult.textContent = error.message || "無法連線到 YouTube helper。";
+  }
 }
 
 async function ensureDraftEntryId(force = false) {
@@ -235,6 +264,7 @@ async function refreshRecentEntries() {
 async function hydrateCurrentAssetType(forceDraft = false) {
   await ensureDraftEntryId(forceDraft);
   await refreshRecentEntries();
+  await refreshYouTubeAuthStatus();
   setStatus(`已準備 ${ASSET_META[state.assetType].label} 草稿編號 ${state.draftIds[state.assetType]}。`, "success");
 }
 
@@ -323,6 +353,55 @@ refreshDraftIdButton.addEventListener("click", async () => {
     setStatus(`已改成新的草稿編號 ${nextId}。`, "success");
   } catch (error) {
     setStatus(error.message || "換編號失敗", "error");
+  } finally {
+    setBusy(false);
+  }
+});
+
+youtubeAuthButton.addEventListener("click", async () => {
+  setBusy(true);
+  youtubeResult.textContent = "正在開啟 YouTube 授權流程。";
+  try {
+    const response = await sendMessage("lpav:youtubeAuthStart");
+    setYouTubeAuthState(Boolean(response?.authorized));
+    youtubeResult.textContent = response?.authorized ? "YouTube 已授權，可以開始上傳。" : "YouTube 尚未授權。";
+  } catch (error) {
+    setYouTubeAuthState(false);
+    youtubeResult.textContent = error.message || "YouTube 授權失敗。";
+  } finally {
+    setBusy(false);
+  }
+});
+
+youtubeUploadButton.addEventListener("click", async () => {
+  const file = youtubeVideoFile.files?.[0];
+  if (!file) {
+    setStatus("請先選擇要上傳的影片檔。", "error");
+    return;
+  }
+
+  setBusy(true);
+  youtubeResult.textContent = "正在上傳影片到 YouTube，請稍候。";
+  try {
+    const buffer = await file.arrayBuffer();
+    const response = await sendMessage("lpav:youtubeUpload", {
+      fileName: file.name,
+      fileBytes: Array.from(new Uint8Array(buffer)),
+      mimeType: file.type || "video/mp4",
+      title: titleInput.value.trim() || state.draftIds[state.assetType] || "LPAV Upload",
+      description: notesInput.value.trim() || promptInput.value.trim(),
+      privacyStatus: youtubePrivacyStatus.value,
+      tags: tagsInput.value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    });
+
+    youtubeResult.textContent = `已上傳成功：${response.youtubeUrl}`;
+    setStatus(`YouTube 上傳完成，影片編號 ${response.videoId}。`, "success");
+  } catch (error) {
+    youtubeResult.textContent = error.message || "YouTube 上傳失敗。";
+    setStatus(error.message || "YouTube 上傳失敗。", "error");
   } finally {
     setBusy(false);
   }

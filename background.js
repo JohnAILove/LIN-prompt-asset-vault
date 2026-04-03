@@ -6,6 +6,8 @@ const ASSET_TYPE_LABEL = {
   text: "文字"
 };
 
+const YOUTUBE_HELPER_BASE_URL = "http://127.0.0.1:8765";
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   void handleMessage(message)
     .then((result) => sendResponse({ ok: true, ...result }))
@@ -16,6 +18,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return true;
 });
+
+async function helperRequest(path, options = {}) {
+  let response;
+
+  try {
+    response = await fetch(`${YOUTUBE_HELPER_BASE_URL}${path}`, options);
+  } catch (error) {
+    throw new Error("YouTube helper 未啟動，請先執行 scripts/start_youtube_helper.ps1。");
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const payload = contentType.includes("application/json") ? await response.json() : { ok: response.ok, error: await response.text() };
+
+  if (!response.ok || payload.ok === false) {
+    throw new Error(payload.error || "YouTube helper 執行失敗。");
+  }
+
+  return payload;
+}
 
 function downloadFile(options) {
   return new Promise((resolve, reject) => {
@@ -58,6 +79,48 @@ async function createDownloadFolder(entryId, assetType) {
   };
 }
 
+async function getYouTubeAuthStatus() {
+  const payload = await helperRequest("/auth/status");
+  return {
+    authorized: Boolean(payload.authorized)
+  };
+}
+
+async function startYouTubeAuth() {
+  const payload = await helperRequest("/auth/start", {
+    method: "POST"
+  });
+
+  return {
+    authorized: Boolean(payload.authorized)
+  };
+}
+
+async function uploadVideoToYouTube(payload) {
+  const fileBytes = payload.fileBytes || [];
+  const byteArray = fileBytes instanceof Uint8Array ? fileBytes : Uint8Array.from(fileBytes);
+  const blob = new Blob([byteArray], { type: payload.mimeType || "video/mp4" });
+  const formData = new FormData();
+
+  formData.append("video", blob, payload.fileName || "upload.mp4");
+  formData.append("title", payload.title || "LPAV Upload");
+  formData.append("description", payload.description || "");
+  formData.append("privacyStatus", payload.privacyStatus || "private");
+  formData.append("tagsJson", JSON.stringify(payload.tags || []));
+
+  const response = await helperRequest("/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  return {
+    videoId: response.videoId,
+    youtubeUrl: response.youtubeUrl,
+    privacyStatus: response.privacyStatus,
+    title: response.title
+  };
+}
+
 async function handleMessage(message) {
   if (!message?.type) {
     throw new Error("缺少訊息類型。");
@@ -72,6 +135,12 @@ async function handleMessage(message) {
       return { entries: await listRecentEntries(message.payload.assetType, 5) };
     case "lpav:createDownloadFolder":
       return createDownloadFolder(message.payload.entryId, message.payload.assetType);
+    case "lpav:youtubeAuthStatus":
+      return getYouTubeAuthStatus();
+    case "lpav:youtubeAuthStart":
+      return startYouTubeAuth();
+    case "lpav:youtubeUpload":
+      return uploadVideoToYouTube(message.payload);
     default:
       throw new Error(`不支援的訊息類型：${message.type}`);
   }

@@ -4,3 +4,6 @@ __pycache__/
 .obsidian/
 services/config.local.js
 singular-vector-370902-*.json
+client_secret_*.json
+.youtube-token.json
+.youtube-upload-helper.log

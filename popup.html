@@ -75,6 +75,39 @@
             <textarea id="notes" name="notes" rows="3" placeholder="補充參考來源、鏡頭節奏、版本差異"></textarea>
           </label>
 
+          <section id="youtubePanel" class="inline-panel" hidden>
+            <div class="section-head inline-head">
+              <h3>YouTube 上傳</h3>
+              <span id="youtubeAuthBadge" class="section-tip">尚未授權</span>
+            </div>
+
+            <div class="youtube-panel">
+              <label class="field">
+                <span class="field-label">影片檔案</span>
+                <input id="youtubeVideoFile" type="file" accept="video/*">
+              </label>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span class="field-label">隱私設定</span>
+                  <select id="youtubePrivacyStatus">
+                    <option value="private">私人</option>
+                    <option value="unlisted">非公開</option>
+                    <option value="public">公開</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span class="field-label">授權</span>
+                  <button id="youtubeAuthButton" class="ghost-button" type="button">連接 YouTube</button>
+                </label>
+              </div>
+
+              <button id="youtubeUploadButton" class="primary-button" type="button">上傳到 YouTube</button>
+              <p id="youtubeResult" class="youtube-result">尚未上傳影片。</p>
+            </div>
+          </section>
+
           <div class="action-row">
             <button id="saveButton" class="primary-button" type="submit">寫入 Sheet</button>
             <button id="resetButton" class="ghost-button" type="button">清空</button>

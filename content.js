@@ -456,6 +456,20 @@
         margin-top: 8px;
         color: #9da8bb;
       }
+
+      .lpav-youtube-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .lpav-youtube-result {
+        margin: 0;
+        color: #9da8bb;
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
     </style>
     <div class="lpav-dock">
       <button id="lpavBadge" class="lpav-badge" type="button" aria-label="LPAV 懸浮入口" aria-expanded="false" aria-controls="lpavPanel">
@@ -528,6 +542,39 @@
                 <textarea id="lpavNotes" class="lpav-textarea" name="notes" placeholder="補充參考來源、鏡頭節奏、版本差異"></textarea>
               </label>
 
+              <section id="lpavYouTubePanel" class="lpav-card" hidden>
+                <div class="lpav-card-head">
+                  <h3>YouTube 上傳</h3>
+                  <span id="lpavYouTubeAuthBadge" class="lpav-tip">尚未授權</span>
+                </div>
+
+                <div class="lpav-youtube-panel">
+                  <label class="lpav-field">
+                    <span class="lpav-label">影片檔案</span>
+                    <input id="lpavYouTubeVideoFile" class="lpav-input" type="file" accept="video/*">
+                  </label>
+
+                  <div class="lpav-grid">
+                    <label class="lpav-field">
+                      <span class="lpav-label">隱私設定</span>
+                      <select id="lpavYouTubePrivacyStatus" class="lpav-select">
+                        <option value="private">私人</option>
+                        <option value="unlisted">非公開</option>
+                        <option value="public">公開</option>
+                      </select>
+                    </label>
+
+                    <label class="lpav-field">
+                      <span class="lpav-label">授權</span>
+                      <button id="lpavYouTubeAuthButton" class="lpav-button lpav-button-ghost" type="button">連接 YouTube</button>
+                    </label>
+                  </div>
+
+                  <button id="lpavYouTubeUploadButton" class="lpav-button lpav-button-primary" type="button">上傳到 YouTube</button>
+                  <p id="lpavYouTubeResult" class="lpav-youtube-result">尚未上傳影片。</p>
+                </div>
+              </section>
+
               <div class="lpav-action-row">
                 <button id="lpavSaveButton" class="lpav-button lpav-button-primary" type="submit">寫入 Sheet</button>
                 <button id="lpavResetButton" class="lpav-button lpav-button-ghost" type="button">清空</button>
@@ -546,6 +593,7 @@
               <p class="lpav-empty">目前還沒有資料，先存第一筆看看。</p>
             </div>
           </section>
+
         </div>
       </section>
     </div>
@@ -574,6 +622,13 @@
   const resetButton = shadow.getElementById("lpavResetButton");
   const refreshButton = shadow.getElementById("lpavRefreshButton");
   const recentList = shadow.getElementById("lpavRecentList");
+  const youtubePanel = shadow.getElementById("lpavYouTubePanel");
+  const youtubeAuthBadge = shadow.getElementById("lpavYouTubeAuthBadge");
+  const youtubeVideoFile = shadow.getElementById("lpavYouTubeVideoFile");
+  const youtubePrivacyStatus = shadow.getElementById("lpavYouTubePrivacyStatus");
+  const youtubeAuthButton = shadow.getElementById("lpavYouTubeAuthButton");
+  const youtubeUploadButton = shadow.getElementById("lpavYouTubeUploadButton");
+  const youtubeResult = shadow.getElementById("lpavYouTubeResult");
   const tabButtons = Array.from(shadow.querySelectorAll("[data-asset-type]"));
 
   const state = {
@@ -621,6 +676,8 @@
     refreshButton.disabled = isBusy;
     createFolderButton.disabled = isBusy;
     refreshDraftIdButton.disabled = isBusy;
+    youtubeAuthButton.disabled = isBusy;
+    youtubeUploadButton.disabled = isBusy;
     tabButtons.forEach((button) => {
       button.disabled = isBusy;
     });
@@ -730,12 +787,32 @@
     createFolderButton.textContent = "建立資料夾";
     refreshDraftIdButton.textContent = "換編號";
     draftEntryId.textContent = state.draftIds[assetType] || "準備中";
+    youtubePanel.hidden = assetType !== "video";
 
     tabButtons.forEach((button) => {
       const isActive = button.dataset.assetType === assetType;
       button.dataset.active = String(isActive);
       button.setAttribute("aria-selected", String(isActive));
     });
+  }
+
+  function setYouTubeAuthState(authorized) {
+    youtubeAuthBadge.textContent = authorized ? "已授權" : "尚未授權";
+    youtubeAuthButton.textContent = authorized ? "重新授權" : "連接 YouTube";
+  }
+
+  async function refreshYouTubeAuthStatus() {
+    if (state.assetType !== "video") {
+      return;
+    }
+
+    try {
+      const response = await sendMessage("lpav:youtubeAuthStatus");
+      setYouTubeAuthState(Boolean(response?.authorized));
+    } catch (error) {
+      setYouTubeAuthState(false);
+      youtubeResult.textContent = error.message || "無法連線到 YouTube helper。";
+    }
   }
 
   function renderRecentEntries(entries) {
@@ -821,6 +898,7 @@
   async function hydrateCurrentAssetType(forceDraft = false) {
     await ensureDraftEntryId(forceDraft);
     await refreshRecentEntries();
+    await refreshYouTubeAuthStatus();
     setStatus(`已準備 ${ASSET_META[state.assetType].label} 草稿編號 ${state.draftIds[state.assetType]}。`, "success");
   }
 
@@ -990,6 +1068,55 @@
       setStatus(`已改成新的草稿編號 ${nextId}。`, "success");
     } catch (error) {
       setStatus(error.message || "換編號失敗", "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  youtubeAuthButton.addEventListener("click", async () => {
+    setBusy(true);
+    youtubeResult.textContent = "正在開啟 YouTube 授權流程。";
+    try {
+      const response = await sendMessage("lpav:youtubeAuthStart");
+      setYouTubeAuthState(Boolean(response?.authorized));
+      youtubeResult.textContent = response?.authorized ? "YouTube 已授權，可以開始上傳。" : "YouTube 尚未授權。";
+    } catch (error) {
+      setYouTubeAuthState(false);
+      youtubeResult.textContent = error.message || "YouTube 授權失敗。";
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  youtubeUploadButton.addEventListener("click", async () => {
+    const file = youtubeVideoFile.files?.[0];
+    if (!file) {
+      setStatus("請先選擇要上傳的影片檔。", "error");
+      return;
+    }
+
+    setBusy(true);
+    youtubeResult.textContent = "正在上傳影片到 YouTube，請稍候。";
+    try {
+      const buffer = await file.arrayBuffer();
+      const response = await sendMessage("lpav:youtubeUpload", {
+        fileName: file.name,
+        fileBytes: Array.from(new Uint8Array(buffer)),
+        mimeType: file.type || "video/mp4",
+        title: titleInput.value.trim() || state.draftIds[state.assetType] || "LPAV Upload",
+        description: notesInput.value.trim() || promptInput.value.trim(),
+        privacyStatus: youtubePrivacyStatus.value,
+        tags: tagsInput.value
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+      });
+
+      youtubeResult.textContent = `已上傳成功：${response.youtubeUrl}`;
+      setStatus(`YouTube 上傳完成，影片編號 ${response.videoId}。`, "success");
+    } catch (error) {
+      youtubeResult.textContent = error.message || "YouTube 上傳失敗。";
+      setStatus(error.message || "YouTube 上傳失敗。", "error");
     } finally {
       setBusy(false);
     }

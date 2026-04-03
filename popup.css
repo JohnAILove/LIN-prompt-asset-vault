@@ -112,6 +112,15 @@ body {
   font-size: 16px;
 }
 
+.inline-head {
+  margin-bottom: 0;
+}
+
+.inline-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
 .section-tip {
   color: var(--muted);
   font-size: 12px;
@@ -332,4 +341,27 @@ textarea {
 .recent-notes {
   margin-top: 8px;
   color: var(--muted);
+}
+
+.youtube-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.inline-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(120, 138, 168, 0.14);
+  border-radius: var(--radius-md);
+  background: rgba(18, 22, 30, 0.92);
+}
+
+.youtube-result {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
