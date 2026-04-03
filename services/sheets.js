@@ -37,8 +37,24 @@ const SHEET_HEADERS = [
 ];
 
 const ENTRY_ID_RETRY_LIMIT = 20;
+const RETRY_DELAYS_MS = [800, 1600];
+const readySheets = new Set();
+let knownSheetTitles = null;
 
-async function sheetsRequest(path, options = {}) {
+function getAssetMeta(assetType) {
+  const meta = ASSET_TYPE_META[assetType];
+  if (!meta) {
+    throw new Error(`不支援的資產類型：${assetType}`);
+  }
+
+  return meta;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function sheetsRequest(path, options = {}, attempt = 0) {
   const accessToken = await getAccessToken();
   const response = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${LPAV_CONFIG.spreadsheet.spreadsheetId}${path}`,
@@ -53,7 +69,16 @@ async function sheetsRequest(path, options = {}) {
   );
 
   if (!response.ok) {
+    if ((response.status === 429 || response.status >= 500) && attempt < RETRY_DELAYS_MS.length) {
+      await sleep(RETRY_DELAYS_MS[attempt]);
+      return sheetsRequest(path, options, attempt + 1);
+    }
+
     const errorText = await response.text();
+    if (response.status === 429) {
+      throw new Error("Google Sheet 讀取太頻繁，請等幾秒再試。");
+    }
+
     throw new Error(`Google Sheet API 錯誤：${errorText}`);
   }
 
@@ -64,11 +89,24 @@ async function sheetsRequest(path, options = {}) {
   return response.json();
 }
 
-async function ensureSheetExists(sheetName) {
-  const metadata = await sheetsRequest("?fields=sheets.properties.title");
-  const exists = metadata.sheets?.some((sheet) => sheet.properties?.title === sheetName);
+async function loadSheetTitles(force = false) {
+  if (knownSheetTitles && !force) {
+    return knownSheetTitles;
+  }
 
-  if (exists) {
+  const metadata = await sheetsRequest("?fields=sheets.properties.title");
+  knownSheetTitles = new Set(
+    (metadata.sheets || [])
+      .map((sheet) => sheet.properties?.title)
+      .filter(Boolean)
+  );
+
+  return knownSheetTitles;
+}
+
+async function ensureSheetExists(sheetName) {
+  const titles = await loadSheetTitles();
+  if (titles.has(sheetName)) {
     return;
   }
 
@@ -86,6 +124,8 @@ async function ensureSheetExists(sheetName) {
       ]
     })
   });
+
+  titles.add(sheetName);
 }
 
 async function ensureHeaderRow(sheetName) {
@@ -108,44 +148,30 @@ async function ensureHeaderRow(sheetName) {
   });
 }
 
+async function ensureSheetReady(assetType) {
+  const { sheetName } = getAssetMeta(assetType);
+  if (readySheets.has(sheetName)) {
+    return sheetName;
+  }
+
+  await ensureSheetExists(sheetName);
+  await ensureHeaderRow(sheetName);
+  readySheets.add(sheetName);
+  return sheetName;
+}
+
 async function listExistingIdsForSheet(sheetName) {
   const encodedRange = encodeURIComponent(`${sheetName}!A2:A`);
   const result = await sheetsRequest(`/values/${encodedRange}`);
   const rows = result.values || [];
 
   return rows
-    .map((row) => String(row[0] || "").trim())
+    .map((row) => String(row[0] || "").trim().toUpperCase())
     .filter(Boolean);
 }
 
-function getAssetMeta(assetType) {
-  const meta = ASSET_TYPE_META[assetType];
-  if (!meta) {
-    throw new Error(`不支援的資產類型：${assetType}`);
-  }
-
-  return meta;
-}
-
-async function ensureAllSheetsReady() {
-  const sheetNames = Object.values(ASSET_TYPE_META).map((meta) => meta.sheetName);
-  await Promise.all(
-    sheetNames.map(async (sheetName) => {
-      await ensureSheetExists(sheetName);
-      await ensureHeaderRow(sheetName);
-    })
-  );
-}
-
-async function ensureSheetReady(assetType) {
-  const { sheetName } = getAssetMeta(assetType);
-  await ensureSheetExists(sheetName);
-  await ensureHeaderRow(sheetName);
-  return sheetName;
-}
-
 async function buildUniqueEntryId(preferredId = "") {
-  await ensureAllSheetsReady();
+  await Promise.all(Object.keys(ASSET_TYPE_META).map((assetType) => ensureSheetReady(assetType)));
   const sheetNames = Object.values(ASSET_TYPE_META).map((meta) => meta.sheetName);
   const existingIdGroups = await Promise.all(sheetNames.map((sheetName) => listExistingIdsForSheet(sheetName)));
   const existingIds = new Set(existingIdGroups.flat());
@@ -203,7 +229,7 @@ function mapRowToEntry(row) {
 export async function prepareDraftEntry(assetType) {
   await ensureSheetReady(assetType);
   return {
-    entryId: await buildUniqueEntryId()
+    entryId: buildEntryId()
   };
 }
 

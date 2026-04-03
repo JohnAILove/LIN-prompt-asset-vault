@@ -11,7 +11,7 @@
       <section class="hero-card">
         <p class="eyebrow">LPAV MVP</p>
         <h1>Lin Prompt Asset Vault</h1>
-        <p id="heroCopy" class="hero-copy">先為影片資產開好編號，再把提示詞、參考圖和本機素材全部對到同一筆。</p>
+        <p id="heroCopy" class="hero-copy">先為影片資產配好草稿編號，再開始整理提示詞、素材與備註。</p>
         <div id="statusBanner" class="status-banner" data-state="idle">影片草稿已就緒，可以開始整理這筆素材。</div>
       </section>
 
@@ -39,7 +39,10 @@
               <span class="draft-label">目前編號</span>
               <strong id="draftEntryId" class="draft-id">準備中</strong>
             </div>
-            <button id="createFolderButton" class="ghost-button draft-folder-button" type="button">建立資料夾</button>
+            <div class="draft-actions">
+              <button id="createFolderButton" class="ghost-button draft-folder-button" type="button">建立資料夾</button>
+              <button id="refreshDraftIdButton" class="ghost-button draft-folder-button" type="button">換編號</button>
+            </div>
           </div>
 
           <label class="field">

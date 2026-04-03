@@ -22,7 +22,7 @@ function downloadFile(options) {
     chrome.downloads.download(options, (downloadId) => {
       const lastError = chrome.runtime.lastError;
       if (lastError) {
-        reject(new Error(lastError.message || "下載資料夾建立失敗"));
+        reject(new Error(lastError.message || "建立下載資料夾失敗"));
         return;
       }
 

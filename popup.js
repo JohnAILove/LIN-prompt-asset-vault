@@ -14,6 +14,7 @@ const tagsInput = document.getElementById("tags");
 const notesInput = document.getElementById("notes");
 const draftEntryId = document.getElementById("draftEntryId");
 const createFolderButton = document.getElementById("createFolderButton");
+const refreshDraftIdButton = document.getElementById("refreshDraftIdButton");
 const assetForm = document.getElementById("assetForm");
 const saveButton = document.getElementById("saveButton");
 const resetButton = document.getElementById("resetButton");
@@ -24,7 +25,7 @@ const assetTypeButtons = Array.from(document.querySelectorAll("[data-asset-type]
 const ASSET_META = {
   video: {
     label: "影片",
-    heroCopy: "先為影片資產開好編號，再把提示詞、參考圖和本機素材全部對到同一筆。",
+    heroCopy: "先為影片資產配好草稿編號，再開始整理提示詞、素材與備註。",
     statusReady: "影片草稿已就緒，可以開始整理這筆素材。",
     assetTypeTip: "預設先做影片分頁",
     composeTitle: "新增影片資產",
@@ -39,9 +40,9 @@ const ASSET_META = {
   },
   image: {
     label: "圖片",
-    heroCopy: "圖片資產也先拿到編號，後續的參考圖、局部版本和輸出稿都比較好對。",
+    heroCopy: "先為圖片資產配好草稿編號，再開始整理構圖、風格和版本備註。",
     statusReady: "圖片草稿已就緒，可以開始整理這筆素材。",
-    assetTypeTip: "切到圖片分頁時會先配編號",
+    assetTypeTip: "切到圖片分頁也會先配編號",
     composeTitle: "新增圖片資產",
     sheetTip: "寫入 Google Sheet 的「圖片」分頁",
     titleLabel: "標題",
@@ -54,9 +55,9 @@ const ASSET_META = {
   },
   text: {
     label: "文字",
-    heroCopy: "文字資產同樣先編號，後續整理 prompt、筆記和範本時才不會散掉。",
+    heroCopy: "先為文字資產配好草稿編號，再開始整理 prompt、結構與補充筆記。",
     statusReady: "文字草稿已就緒，可以開始整理這筆素材。",
-    assetTypeTip: "切到文字分頁時會先配編號",
+    assetTypeTip: "切到文字分頁也會先配編號",
     composeTitle: "新增文字資產",
     sheetTip: "寫入 Google Sheet 的「文字」分頁",
     titleLabel: "標題",
@@ -84,6 +85,7 @@ function setBusy(isBusy) {
   resetButton.disabled = isBusy;
   refreshButton.disabled = isBusy;
   createFolderButton.disabled = isBusy;
+  refreshDraftIdButton.disabled = isBusy;
 
   assetTypeButtons.forEach((button) => {
     button.disabled = isBusy;
@@ -187,6 +189,7 @@ function applyAssetTypeUI(assetType) {
   tagsInput.placeholder = meta.tagsPlaceholder;
   notesInput.placeholder = meta.notesPlaceholder;
   createFolderButton.textContent = "建立資料夾";
+  refreshDraftIdButton.textContent = "換編號";
   draftEntryId.textContent = state.draftIds[assetType] || "準備中";
 
   assetTypeButtons.forEach((button) => {
@@ -217,6 +220,7 @@ async function ensureDraftEntryId(force = false) {
 
 async function refreshRecentEntries() {
   setStatus(`正在刷新最近 5 筆${ASSET_META[state.assetType].label}資料。`, "loading");
+
   const response = await sendMessage("lpav:listRecentEntries", {
     assetType: state.assetType
   });
@@ -307,6 +311,18 @@ createFolderButton.addEventListener("click", async () => {
     setStatus(`已在下載資料夾建立 ${entryId}。`, "success");
   } catch (error) {
     setStatus(error.message || "建立下載資料夾失敗", "error");
+  } finally {
+    setBusy(false);
+  }
+});
+
+refreshDraftIdButton.addEventListener("click", async () => {
+  setBusy(true);
+  try {
+    const nextId = await ensureDraftEntryId(true);
+    setStatus(`已改成新的草稿編號 ${nextId}。`, "success");
+  } catch (error) {
+    setStatus(error.message || "換編號失敗", "error");
   } finally {
     setBusy(false);
   }

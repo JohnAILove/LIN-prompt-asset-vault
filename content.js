@@ -277,6 +277,12 @@
         align-items: stretch;
       }
 
+      .lpav-draft-actions {
+        display: grid;
+        gap: 10px;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+      }
+
       .lpav-draft-box {
         display: grid;
         gap: 4px;
@@ -389,6 +395,15 @@
         text-overflow: ellipsis;
       }
 
+      #lpavRefreshDraftIdButton {
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       .lpav-recent-list {
         display: grid;
         gap: 10px;
@@ -477,7 +492,10 @@
                   <span class="lpav-draft-label">目前編號</span>
                   <strong id="lpavDraftEntryId" class="lpav-draft-id">準備中</strong>
                 </div>
-                <button id="lpavCreateFolderButton" class="lpav-button lpav-button-ghost" type="button">建立資料夾</button>
+                <div class="lpav-draft-actions">
+                  <button id="lpavCreateFolderButton" class="lpav-button lpav-button-ghost" type="button">建立資料夾</button>
+                  <button id="lpavRefreshDraftIdButton" class="lpav-button lpav-button-ghost" type="button">換編號</button>
+                </div>
               </div>
 
               <label class="lpav-field">
@@ -551,6 +569,7 @@
   const notesInput = shadow.getElementById("lpavNotes");
   const draftEntryId = shadow.getElementById("lpavDraftEntryId");
   const createFolderButton = shadow.getElementById("lpavCreateFolderButton");
+  const refreshDraftIdButton = shadow.getElementById("lpavRefreshDraftIdButton");
   const saveButton = shadow.getElementById("lpavSaveButton");
   const resetButton = shadow.getElementById("lpavResetButton");
   const refreshButton = shadow.getElementById("lpavRefreshButton");
@@ -601,6 +620,7 @@
     resetButton.disabled = isBusy;
     refreshButton.disabled = isBusy;
     createFolderButton.disabled = isBusy;
+    refreshDraftIdButton.disabled = isBusy;
     tabButtons.forEach((button) => {
       button.disabled = isBusy;
     });
@@ -708,6 +728,7 @@
     tagsInput.placeholder = meta.tagsPlaceholder;
     notesInput.placeholder = meta.notesPlaceholder;
     createFolderButton.textContent = "建立資料夾";
+    refreshDraftIdButton.textContent = "換編號";
     draftEntryId.textContent = state.draftIds[assetType] || "準備中";
 
     tabButtons.forEach((button) => {
@@ -957,6 +978,18 @@
       setStatus(`已在下載資料夾建立 ${entryId}。`, "success");
     } catch (error) {
       setStatus(error.message || "建立下載資料夾失敗", "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  refreshDraftIdButton.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      const nextId = await ensureDraftEntryId(true);
+      setStatus(`已改成新的草稿編號 ${nextId}。`, "success");
+    } catch (error) {
+      setStatus(error.message || "換編號失敗", "error");
     } finally {
       setBusy(false);
     }
