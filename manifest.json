@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Lin Prompt Asset Vault",
+  "version": "0.1.0",
+  "description": "小林創意的提示詞資產庫 MVP。",
+  "action": {
+    "default_title": "LPAV",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/badge-lightning.png"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://oauth2.googleapis.com/*",
+    "https://sheets.googleapis.com/*"
+  ]
+}

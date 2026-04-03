@@ -1,0 +1,23 @@
+{
+	"nodes":[
+		{"id":"center-doc","type":"file","file":"開荒文檔.md","x":-20,"y":40,"width":580,"height":420},
+		{"id":"title","type":"text","text":"# Lin Prompt Asset Vault\n\nRepo：`lin-prompt-asset-vault`\n簡稱：LPAV\n\n定位：Chrome 常駐提示詞＋圖片＋影片資產庫","x":-620,"y":20,"width":360,"height":220},
+		{"id":"goal","type":"text","text":"# 核心目標\n\n- 快速存 prompt\n- 快速上傳圖片\n- 快速上傳影片\n- 用 Google Sheet 做索引\n- 用 Google Drive 存實體檔案","x":-620,"y":300,"width":360,"height":220},
+		{"id":"mvp","type":"text","text":"# MVP\n\n1. Popup 介面\n2. Google OAuth\n3. 文字收藏\n4. 圖片上傳\n5. 影片上傳\n6. Sheet 索引寫入","x":650,"y":20,"width":340,"height":220},
+		{"id":"flow","type":"text","text":"# API 流程\n\nPopup\n→ Google OAuth\n→ Drive API 上傳\n→ 設公開權限（選配）\n→ Sheets API 寫入索引\n→ 完成收藏","x":650,"y":290,"width":340,"height":220},
+		{"id":"sheet","type":"text","text":"# Sheet 命名\n\n工作簿名稱：\n小林創意｜提示詞與資產庫\n\n主分頁：\nassets","x":40,"y":560,"width":300,"height":260},
+		{"id":"drive","type":"text","text":"# Drive 結構\n\nLPAV/\n├─ images/\n├─ videos/\n└─ temp/（選配）","x":390,"y":560,"width":280,"height":240},
+		{"id":"not-now","type":"text","text":"# 先不要做\n\n- YouTube 上傳\n- 自動抓網址\n- 自動分類\n- 側邊浮動按鈕\n- 多人共用\n- 漂亮後台","x":-320,"y":560,"width":300,"height":320},
+		{"id":"milestone","type":"text","text":"# 開發順序\n\nSprint 1：Popup + OAuth\nSprint 2：文字收藏\nSprint 3：圖片上傳\nSprint 4：影片上傳\nSprint 5：最近資料與搜尋","x":700,"y":560,"width":320,"height":220}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"title","fromSide":"right","toNode":"center-doc","toSide":"left"},
+		{"id":"e2","fromNode":"goal","fromSide":"right","toNode":"center-doc","toSide":"left"},
+		{"id":"e3","fromNode":"center-doc","fromSide":"right","toNode":"mvp","toSide":"left"},
+		{"id":"e4","fromNode":"center-doc","fromSide":"right","toNode":"flow","toSide":"left"},
+		{"id":"e5","fromNode":"center-doc","fromSide":"bottom","toNode":"sheet","toSide":"top"},
+		{"id":"e6","fromNode":"center-doc","fromSide":"bottom","toNode":"drive","toSide":"top"},
+		{"id":"e7","fromNode":"center-doc","fromSide":"bottom","toNode":"not-now","toSide":"top"},
+		{"id":"e8","fromNode":"center-doc","fromSide":"bottom","toNode":"milestone","toSide":"top"}
+	]
+}

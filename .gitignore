@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.obsidian/
+services/config.local.js
+singular-vector-370902-*.json

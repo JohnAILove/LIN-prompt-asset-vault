@@ -1,0 +1,29 @@
+{
+	"nodes":[
+		{"id":"title","type":"text","text":"# LPAV 最小 MVP 藍圖\n\n給群友看的分享版\n目的：讓有能力的人可照這個框架自行刻出第一版","x":-760,"y":-40,"width":360,"height":220},
+		{"id":"what-is-this","type":"text","text":"# 這個專案在做什麼\n\nPrompt Asset Vault\n\n一個用來快速收藏：\n- prompt\n- 圖片\n- 影片\n\n的個人資產庫工具","x":-760,"y":220,"width":360,"height":240},
+		{"id":"center","type":"text","text":"# 核心思路\n\nExtension 負責「快速收集」\nWeb / 後台負責「展示與管理」\nGoogle Sheet / Drive 負責「先把資料放進去」\n\n先跑通，再升級","x":-250,"y":40,"width":420,"height":260},
+		{"id":"mvp","type":"text","text":"# 最小 MVP 先做什麼\n\n1. 右側懸浮按鈕\n2. 點開可輸入文字 prompt\n3. 可加標題 / 標籤 / 備註\n4. 一鍵寫入 Google Sheet\n5. 面板內顯示最近 5 筆","x":260,"y":-40,"width":360,"height":260},
+		{"id":"now-state","type":"text","text":"# 目前這版已做到\n\n- Chrome Extension 可載入\n- 右側懸浮徽章可拖曳\n- dark 風格面板\n- 可把文字資料寫進指定 Google Sheet\n- 可讀最近 5 筆","x":260,"y":260,"width":360,"height":260},
+		{"id":"data-flow","type":"text","text":"# 資料流\n\n使用者在網頁看到好內容\n→ 點右側懸浮按鈕\n→ 填表單\n→ 背景服務整理欄位\n→ 寫入 Google Sheet\n→ 面板刷新最近資料","x":700,"y":40,"width":340,"height":240},
+		{"id":"split-why","type":"text","text":"# 為什麼要拆成兩層\n\nExtension：\n負責快存，不要打斷工作流\n\n展示網頁：\n負責搜尋、分類、回看、分享\n\n不要把展示硬塞進小面板","x":-250,"y":360,"width":420,"height":280},
+		{"id":"future","type":"text","text":"# 後續可以加什麼\n\n- 圖片上傳到 Drive\n- 影片上傳到 Drive\n- 收藏牆 / 搜尋頁\n- LINE 白名單登入\n- 公開展示頁\n- 後端 API 與權限控管","x":260,"y":580,"width":360,"height":260},
+		{"id":"modules","type":"text","text":"# 如果群友要自己刻\n\n建議拆模組：\n- content script：懸浮 UI\n- background：訊息轉發 / 寫入入口\n- sheets service：Google Sheet API\n- auth：token / service account\n- future web app：展示站","x":700,"y":700,"width":360,"height":280},
+		{"id":"not-now","type":"text","text":"# 第一版先不要做\n\n- 太完整的後台\n- 很重的權限系統\n- 太多欄位\n- 複雜搜尋\n- 多人協作流程\n- 影音播放體驗最佳化","x":-760,"y":520,"width":360,"height":260},
+		{"id":"share-note","type":"text","text":"# 分享給群友時可怎麼講\n\n這不是一次做完的平台\n而是一個先把「收集流程」跑通的框架\n\n先能收\n再能查\n最後才做展示與權限","x":-250,"y":700,"width":420,"height":240},
+		{"id":"sheet-structure","type":"text","text":"# 目前文字分頁欄位\n\n- 編號\n- 建立時間\n- 資產類型\n- 標題\n- 提示詞內容\n- 標籤\n- 備註\n- 雲端檔案ID\n- 雲端檢視連結\n- 檔案類型\n- 是否公開\n- 是否收藏\n- 狀態","x":710,"y":310,"width":340,"height":340}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"title","fromSide":"right","toNode":"center","toSide":"left"},
+		{"id":"e2","fromNode":"what-is-this","fromSide":"right","toNode":"center","toSide":"left"},
+		{"id":"e3","fromNode":"center","fromSide":"right","toNode":"mvp","toSide":"left"},
+		{"id":"e4","fromNode":"center","fromSide":"right","toNode":"now-state","toSide":"left"},
+		{"id":"e5","fromNode":"mvp","fromSide":"right","toNode":"data-flow","toSide":"left"},
+		{"id":"e6","fromNode":"data-flow","fromSide":"bottom","toNode":"sheet-structure","toSide":"top"},
+		{"id":"e7","fromNode":"center","fromSide":"bottom","toNode":"split-why","toSide":"top"},
+		{"id":"e8","fromNode":"split-why","fromSide":"right","toNode":"future","toSide":"left"},
+		{"id":"e9","fromNode":"future","fromSide":"right","toNode":"modules","toSide":"left"},
+		{"id":"e10","fromNode":"what-is-this","fromSide":"bottom","toNode":"not-now","toSide":"top"},
+		{"id":"e11","fromNode":"split-why","fromSide":"bottom","toNode":"share-note","toSide":"top"}
+	]
+}

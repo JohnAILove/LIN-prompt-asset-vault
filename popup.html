@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lin Prompt Asset Vault</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero-card">
+        <p class="eyebrow">LPAV MVP</p>
+        <h1>Lin Prompt Asset Vault</h1>
+        <p class="hero-copy">先把文字收藏跑通，讓提示詞能直接進你指定的 Google Sheet。</p>
+        <div id="statusBanner" class="status-banner" data-state="idle">已就緒，準備寫入文字資產。</div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>資產類型</h2>
+          <span class="section-tip">第一版先開文字收藏</span>
+        </div>
+        <div class="chip-row" role="tablist" aria-label="資產類型">
+          <button type="button" class="chip is-active" aria-selected="true">文字</button>
+          <button type="button" class="chip" disabled aria-selected="false">圖片</button>
+          <button type="button" class="chip" disabled aria-selected="false">影片</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>新增一筆</h2>
+          <span class="section-tip">儲存到「文字」分頁</span>
+        </div>
+
+        <form id="assetForm" class="asset-form">
+          <label class="field">
+            <span class="field-label">標題</span>
+            <input id="title" name="title" type="text" maxlength="120" placeholder="例如：冷色金屬感主視覺提示詞" required>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Prompt 內容</span>
+            <textarea id="promptText" name="promptText" rows="6" placeholder="把你真正要存的提示詞貼進來" required></textarea>
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span class="field-label">標籤</span>
+              <input id="tags" name="tags" type="text" maxlength="160" placeholder="排版, 材質, 視覺">
+            </label>
+
+            <label class="field">
+              <span class="field-label">收藏</span>
+              <select id="favorite" name="favorite">
+                <option value="false">一般</option>
+                <option value="true">星號收藏</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field-label">備註</span>
+            <textarea id="notes" name="notes" rows="3" placeholder="補充靈感來源、版本差異、延伸方向"></textarea>
+          </label>
+
+          <div class="action-row">
+            <button id="saveButton" class="primary-button" type="submit">寫入 Sheet</button>
+            <button id="resetButton" class="ghost-button" type="button">清空</button>
+            <button id="refreshButton" class="ghost-button" type="button">刷新最近資料</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>最近 5 筆</h2>
+          <span class="section-tip">從 Google Sheet 即時讀取</span>
+        </div>
+        <div id="recentList" class="recent-list" aria-live="polite">
+          <p class="empty-state">目前還沒有資料，先新增第一筆。</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

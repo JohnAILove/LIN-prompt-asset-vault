@@ -1,0 +1,29 @@
+{
+	"nodes":[
+		{"id":"title","type":"text","text":"# LPAV 最小 MVP 蓝图\n\n给群友看的分享版\n目的：让有能力的人可照这个框架自行刻出第一版","x":-760,"y":-40,"width":360,"height":220},
+		{"id":"what-is-this","type":"text","text":"# 这个项目在做什么\n\nLin Prompt Asset Vault\n\n一个用来快速收藏：\n- prompt\n- 图片\n- 视频\n\n的个人资产库工具","x":-760,"y":220,"width":360,"height":240},
+		{"id":"center","type":"text","text":"# 核心思路\n\nExtension 负责“快速收集”\nWeb / 后台负责“展示与管理”\nGoogle Sheet / Drive 负责“先把资料放进去”\n\n先跑通，再升级","x":-250,"y":40,"width":420,"height":260},
+		{"id":"mvp","type":"text","text":"# 最小 MVP 先做什么\n\n1. 右侧悬浮按钮\n2. 点开可输入文字 prompt\n3. 可加标题 / 标签 / 备注\n4. 一键写入 Google Sheet\n5. 面板内显示最近 5 笔","x":260,"y":-40,"width":360,"height":260},
+		{"id":"now-state","type":"text","text":"# 目前这版已做到\n\n- Chrome Extension 可载入\n- 右侧悬浮徽章可拖曳\n- dark 风格面板\n- 可把文字资料写进指定 Google Sheet\n- 可读最近 5 笔","x":260,"y":260,"width":360,"height":260},
+		{"id":"data-flow","type":"text","text":"# 数据流\n\n用户在网页看到好内容\n→ 点右侧悬浮按钮\n→ 填表单\n→ 背景服务整理栏位\n→ 写入 Google Sheet\n→ 面板刷新最近资料","x":700,"y":40,"width":340,"height":240},
+		{"id":"sheet-structure","type":"text","text":"# 目前文字分页栏位\n\n- 编号\n- 建立时间\n- 资产类型\n- 标题\n- 提示词内容\n- 标签\n- 备注\n- 云端档案ID\n- 云端检视连结\n- 档案类型\n- 是否公开\n- 是否收藏\n- 状态","x":700,"y":320,"width":340,"height":340},
+		{"id":"split-why","type":"text","text":"# 为什么要拆成两层\n\nExtension：\n负责快存，不要打断工作流\n\n展示网页：\n负责搜索、分类、回看、分享\n\n不要把展示硬塞进小面板","x":-250,"y":360,"width":420,"height":280},
+		{"id":"future","type":"text","text":"# 后续可以加什么\n\n- 图片上传到 Drive\n- 视频上传到 Drive\n- 收藏墙 / 搜索页\n- LINE 白名单登录\n- 公开展示页\n- 后端 API 与权限控管","x":260,"y":580,"width":360,"height":260},
+		{"id":"modules","type":"text","text":"# 如果群友要自己刻\n\n建议拆模块：\n- content script：悬浮 UI\n- background：消息转发 / 写入入口\n- sheets service：Google Sheet API\n- auth：token / service account\n- future web app：展示站","x":700,"y":700,"width":360,"height":280},
+		{"id":"not-now","type":"text","text":"# 第一版先不要做\n\n- 太完整的后台\n- 很重的权限系统\n- 太多栏位\n- 复杂搜索\n- 多人协作流程\n- 影音播放体验最佳化","x":-760,"y":520,"width":360,"height":260},
+		{"id":"share-note","type":"text","text":"# 分享给群友时可怎么讲\n\n这不是一次做完的平台\n而是一个先把“收集流程”跑通的框架\n\n先能收\n再能查\n最后才做展示与权限","x":-250,"y":700,"width":420,"height":240}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"title","fromSide":"right","toNode":"center","toSide":"left"},
+		{"id":"e2","fromNode":"what-is-this","fromSide":"right","toNode":"center","toSide":"left"},
+		{"id":"e3","fromNode":"center","fromSide":"right","toNode":"mvp","toSide":"left"},
+		{"id":"e4","fromNode":"center","fromSide":"right","toNode":"now-state","toSide":"left"},
+		{"id":"e5","fromNode":"mvp","fromSide":"right","toNode":"data-flow","toSide":"left"},
+		{"id":"e6","fromNode":"data-flow","fromSide":"bottom","toNode":"sheet-structure","toSide":"top"},
+		{"id":"e7","fromNode":"center","fromSide":"bottom","toNode":"split-why","toSide":"top"},
+		{"id":"e8","fromNode":"split-why","fromSide":"right","toNode":"future","toSide":"left"},
+		{"id":"e9","fromNode":"future","fromSide":"right","toNode":"modules","toSide":"left"},
+		{"id":"e10","fromNode":"what-is-this","fromSide":"bottom","toNode":"not-now","toSide":"top"},
+		{"id":"e11","fromNode":"split-why","fromSide":"bottom","toNode":"share-note","toSide":"top"}
+	]
+}
