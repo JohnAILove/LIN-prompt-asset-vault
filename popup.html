@@ -11,17 +11,17 @@
       <section class="hero-card">
         <p class="eyebrow">LPAV MVP</p>
         <h1>Lin Prompt Asset Vault</h1>
-        <p id="heroCopy" class="hero-copy">先把影片資產流程做順，讓概念、提示詞與備註先進對應分頁。</p>
-        <div id="statusBanner" class="status-banner" data-state="idle">已就緒，預設準備寫入影片資產。</div>
+        <p id="heroCopy" class="hero-copy">先為影片資產開好編號，再把提示詞、參考圖和本機素材全部對到同一筆。</p>
+        <div id="statusBanner" class="status-banner" data-state="idle">影片草稿已就緒，可以開始整理這筆素材。</div>
       </section>
 
       <section class="panel">
         <div class="section-head">
           <h2>資產類型</h2>
-          <span id="assetTypeTip" class="section-tip">預設先看影片分頁</span>
+          <span id="assetTypeTip" class="section-tip">預設先做影片分頁</span>
         </div>
         <div class="chip-row" role="tablist" aria-label="資產類型">
-          <button type="button" class="chip" data-asset-type="video" aria-selected="false">影片</button>
+          <button type="button" class="chip" data-asset-type="video" aria-selected="true">影片</button>
           <button type="button" class="chip" data-asset-type="image" aria-selected="false">圖片</button>
           <button type="button" class="chip" data-asset-type="text" aria-selected="false">文字</button>
         </div>
@@ -30,10 +30,18 @@
       <section class="panel">
         <div class="section-head">
           <h2 id="composeTitle">新增影片資產</h2>
-          <span id="sheetTip" class="section-tip">儲存到「影片」分頁</span>
+          <span id="sheetTip" class="section-tip">寫入 Google Sheet 的「影片」分頁</span>
         </div>
 
         <form id="assetForm" class="asset-form">
+          <div class="draft-row">
+            <div class="draft-box">
+              <span class="draft-label">目前編號</span>
+              <strong id="draftEntryId" class="draft-id">準備中</strong>
+            </div>
+            <button id="createFolderButton" class="ghost-button draft-folder-button" type="button">建立資料夾</button>
+          </div>
+
           <label class="field">
             <span class="field-label" id="titleLabel">標題</span>
             <input id="title" name="title" type="text" maxlength="120" placeholder="例如：藍色能量流動短片概念" required>
@@ -41,7 +49,7 @@
 
           <label class="field">
             <span class="field-label" id="promptLabel">影片概念 / Prompt</span>
-            <textarea id="promptText" name="promptText" rows="6" placeholder="把影片概念、鏡頭描述、節奏或生成提示貼進來" required></textarea>
+            <textarea id="promptText" name="promptText" rows="6" placeholder="直接貼上影片提示詞、分鏡描述或生成概念" required></textarea>
           </label>
 
           <div class="field-grid">
@@ -54,20 +62,20 @@
               <span class="field-label">收藏</span>
               <select id="favorite" name="favorite">
                 <option value="false">一般</option>
-                <option value="true">星號收藏</option>
+                <option value="true">精選</option>
               </select>
             </label>
           </div>
 
           <label class="field">
             <span class="field-label">備註</span>
-            <textarea id="notes" name="notes" rows="3" placeholder="補充畫面節奏、靈感來源、版本差異"></textarea>
+            <textarea id="notes" name="notes" rows="3" placeholder="補充參考來源、鏡頭節奏、版本差異"></textarea>
           </label>
 
           <div class="action-row">
             <button id="saveButton" class="primary-button" type="submit">寫入 Sheet</button>
             <button id="resetButton" class="ghost-button" type="button">清空</button>
-            <button id="refreshButton" class="ghost-button" type="button">刷新最近資料</button>
+            <button id="refreshButton" class="ghost-button" type="button">刷新</button>
           </div>
         </form>
       </section>
@@ -75,10 +83,10 @@
       <section class="panel">
         <div class="section-head">
           <h2 id="recentTitle">最近 5 筆影片</h2>
-          <span id="recentTip" class="section-tip">從 Google Sheet 即時讀取目前分頁</span>
+          <span id="recentTip" class="section-tip">會即時從試算表抓目前分頁</span>
         </div>
         <div id="recentList" class="recent-list" aria-live="polite">
-          <p class="empty-state">目前還沒有資料，先新增第一筆。</p>
+          <p class="empty-state">目前還沒有資料，先存第一筆看看。</p>
         </div>
       </section>
     </main>

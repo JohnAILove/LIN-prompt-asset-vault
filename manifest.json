@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Lin Prompt Asset Vault",
   "version": "0.1.0",
-  "description": "小林創意的提示詞資產庫 MVP。",
+  "description": "LPAV MVP for design prompt assets.",
   "action": {
     "default_title": "LPAV",
     "default_popup": "popup.html"
@@ -35,7 +35,8 @@
     }
   ],
   "permissions": [
-    "storage"
+    "storage",
+    "downloads"
   ],
   "host_permissions": [
     "https://oauth2.googleapis.com/*",

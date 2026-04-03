@@ -30,9 +30,21 @@ export function isoNow() {
 }
 
 export function buildEntryId() {
-  const timestamp = Date.now().toString(36);
-  const random = crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
-  return `lpav-${timestamp}-${random}`;
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const randomValues = crypto.getRandomValues(new Uint32Array(7));
+
+  let prefix = "";
+  let suffix = "";
+
+  for (let index = 0; index < 3; index += 1) {
+    prefix += letters[randomValues[index] % letters.length];
+  }
+
+  for (let index = 3; index < 7; index += 1) {
+    suffix += String(randomValues[index] % 10);
+  }
+
+  return `${prefix}-${suffix}`;
 }
 
 export function extractRowNumber(updatedRange = "") {

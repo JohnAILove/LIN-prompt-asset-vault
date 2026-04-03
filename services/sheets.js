@@ -36,20 +36,25 @@ const SHEET_HEADERS = [
   "狀態"
 ];
 
+const ENTRY_ID_RETRY_LIMIT = 20;
+
 async function sheetsRequest(path, options = {}) {
   const accessToken = await getAccessToken();
-  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${LPAV_CONFIG.spreadsheet.spreadsheetId}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json; charset=utf-8",
-      ...(options.headers || {})
+  const response = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${LPAV_CONFIG.spreadsheet.spreadsheetId}${path}`,
+    {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json; charset=utf-8",
+        ...(options.headers || {})
+      }
     }
-  });
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Google Sheet API 失敗：${errorText}`);
+    throw new Error(`Google Sheet API 錯誤：${errorText}`);
   }
 
   if (response.status === 204) {
@@ -103,6 +108,16 @@ async function ensureHeaderRow(sheetName) {
   });
 }
 
+async function listExistingIdsForSheet(sheetName) {
+  const encodedRange = encodeURIComponent(`${sheetName}!A2:A`);
+  const result = await sheetsRequest(`/values/${encodedRange}`);
+  const rows = result.values || [];
+
+  return rows
+    .map((row) => String(row[0] || "").trim())
+    .filter(Boolean);
+}
+
 function getAssetMeta(assetType) {
   const meta = ASSET_TYPE_META[assetType];
   if (!meta) {
@@ -112,6 +127,16 @@ function getAssetMeta(assetType) {
   return meta;
 }
 
+async function ensureAllSheetsReady() {
+  const sheetNames = Object.values(ASSET_TYPE_META).map((meta) => meta.sheetName);
+  await Promise.all(
+    sheetNames.map(async (sheetName) => {
+      await ensureSheetExists(sheetName);
+      await ensureHeaderRow(sheetName);
+    })
+  );
+}
+
 async function ensureSheetReady(assetType) {
   const { sheetName } = getAssetMeta(assetType);
   await ensureSheetExists(sheetName);
@@ -119,10 +144,33 @@ async function ensureSheetReady(assetType) {
   return sheetName;
 }
 
-function buildEntryRow(assetType, payload) {
+async function buildUniqueEntryId(preferredId = "") {
+  await ensureAllSheetsReady();
+  const sheetNames = Object.values(ASSET_TYPE_META).map((meta) => meta.sheetName);
+  const existingIdGroups = await Promise.all(sheetNames.map((sheetName) => listExistingIdsForSheet(sheetName)));
+  const existingIds = new Set(existingIdGroups.flat());
+  const normalizedPreferredId = String(preferredId || "").trim().toUpperCase();
+
+  if (normalizedPreferredId && !existingIds.has(normalizedPreferredId)) {
+    return normalizedPreferredId;
+  }
+
+  for (let attempt = 0; attempt < ENTRY_ID_RETRY_LIMIT; attempt += 1) {
+    const candidate = buildEntryId();
+    if (!existingIds.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error("編號重複次數過多，請再試一次。");
+}
+
+async function buildEntryRow(assetType, payload, preferredId = "") {
   const meta = getAssetMeta(assetType);
+  const entryId = await buildUniqueEntryId(preferredId);
+
   return [
-    buildEntryId(),
+    entryId,
     isoNow(),
     meta.label,
     trimMultilineText(payload.title),
@@ -152,21 +200,33 @@ function mapRowToEntry(row) {
   };
 }
 
+export async function prepareDraftEntry(assetType) {
+  await ensureSheetReady(assetType);
+  return {
+    entryId: await buildUniqueEntryId()
+  };
+}
+
 export async function saveEntry(assetType, payload) {
   const sheetName = await ensureSheetReady(assetType);
+  const row = await buildEntryRow(assetType, payload, payload.entryId);
   const encodedRange = encodeURIComponent(`${sheetName}!A:M`);
-  const result = await sheetsRequest(`/values/${encodedRange}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
-    method: "POST",
-    body: JSON.stringify({
-      majorDimension: "ROWS",
-      values: [buildEntryRow(assetType, payload)]
-    })
-  });
+  const result = await sheetsRequest(
+    `/values/${encodedRange}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        majorDimension: "ROWS",
+        values: [row]
+      })
+    }
+  );
 
   const updatedRange = result.updates?.updatedRange || "";
   return {
     sheetName,
-    rowNumber: extractRowNumber(updatedRange) || "未知"
+    rowNumber: extractRowNumber(updatedRange) || "未知",
+    entryId: row[0]
   };
 }
 
